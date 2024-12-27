@@ -4,14 +4,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings, str_strip_whitespace=True):
-    model_config = SettingsConfigDict(
-        env_file=".env", secrets_dir="/run/secrets", env_nested_delimiter="_"
-    )
+    model_config = SettingsConfigDict(env_file=".env", secrets_dir="/run/secrets")
 
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
     S3_BUCKET_NAME: str
     S3_KEY: str
-    S3_ACCESS_KEY_ID: str
-    S3_SECRET_ACCESS_KEY: str
     DOWNLOAD_FILE: Path
     PRE_PROCESSING_SQL: Path | None = None
     POST_PROCESSING_SQL: Path | None = None

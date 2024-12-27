@@ -22,3 +22,6 @@ Dockerfile
 
 # Env
 .env
+
+# data
+data/
