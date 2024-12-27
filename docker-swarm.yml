@@ -1,0 +1,54 @@
+services:
+  swarm-cronjob:
+    image: crazymax/swarm-cronjob:1.14.0
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      - "TZ=Europe/Brussels"
+      - "LOG_LEVEL=info"
+      - "LOG_JSON=false"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  prune-nodes:
+    image: docker
+    command: ["docker", "system", "prune", "-f"]
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      mode: global
+      labels:
+        - "swarm.cronjob.enable=true"
+        - "swarm.cronjob.schedule=*/3 * * * *"
+        - "swarm.cronjob.skip-running=false"
+      restart_policy:
+        condition: none
+
+  sync:
+    image: ghcr.io/wamdata/ds-pg-restore:main
+    env_file: .env
+    deploy:
+      labels:
+        - "swarm.cronjob.enable=true"
+        - "swarm.cronjob.schedule=* * * * *" # Run every minute
+        - "swarm.cronjob.skip-running=true"
+      replicas: 0
+      restart_policy:
+        condition: none
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+
+secrets:
+  postgres_password:
+    external: true
