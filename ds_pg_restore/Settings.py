@@ -10,7 +10,7 @@ class Settings(BaseSettings, str_strip_whitespace=True):
     AWS_SECRET_ACCESS_KEY: str
     S3_BUCKET_NAME: str
     S3_KEY: str
-    DOWNLOAD_FILE: Path
+    DOWNLOAD_FILE: Path = Path("./data/dl/s3_file.sql.gz")
     PRE_PROCESSING_SQL: Path | None = None
     POST_PROCESSING_SQL: Path | None = None
 

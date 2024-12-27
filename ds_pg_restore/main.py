@@ -106,6 +106,8 @@ def download_file_from_s3(
 
     print(f"Starting download of s3://{bucket_name}/{key} to {filename}")
 
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
     try:
         s3_client.download_file(
             bucket_name,
@@ -141,6 +143,7 @@ def run_sql_file(sql_file_path: Path) -> None:
     env["PGPASSWORD"] = settings.POSTGRES_PASSWORD
 
     try:
+        print(f"Running SQL file: {sql_file_path}", flush=True)
         subprocess.run(psql_cmd, env=env, check=True)
         print(f"Successfully executed SQL file: {sql_file_path}")
     except subprocess.CalledProcessError as e:

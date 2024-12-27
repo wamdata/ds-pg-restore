@@ -19,6 +19,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
 
 # Copy the project into the intermediate image
 ADD . /app
+RUN mkdir /app/data
 
 # Sync the project
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \

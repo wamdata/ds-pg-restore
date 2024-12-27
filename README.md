@@ -19,26 +19,20 @@ Restore a PostgreSQL database from an S3-hosted gzipped SQL dump.
 
 Configuration is done via environment variables:
 
-- `S3_BUCKET_NAME`: The name of the S3 bucket containing the SQL dump file.
-- `S3_KEY`: The path to the SQL dump file in the S3 bucket.
-- `S3_ACCESS_KEY_ID`: The AWS access key ID for the S3 bucket.
-- `S3_SECRET_ACCESS_KEY`: The AWS secret access key for the S3 bucket.
-- `DOWNLOAD_FILE`: The local path where the downloaded gzipped SQL dump will be
-  saved (e.g. "dump.sql.gz"). The script will create three files in the same
-  directory:
-  - The downloaded gzipped dump file (e.g. "dump.sql.gz")
-  - A metadata file with the same name plus ".metadata.json" (e.g.
-    "dump.sql.gz.metadata.json") containing the ETag and SHA256 hash
-  - The uncompressed SQL dump with the .gz extension removed (e.g. "dump.sql")
-- `PRE_PROCESSING_SQL`: The path to the SQL file to run before restoring the
-  dump.
-- `POST_PROCESSING_SQL`: The path to the SQL file to run after restoring the
-  dump.
-- `POSTGRES_HOST`: The PostgreSQL server hostname.
-- `POSTGRES_PORT`: The PostgreSQL server port.
-- `POSTGRES_USER`: The PostgreSQL username.
-- `POSTGRES_PASSWORD`: The PostgreSQL password.
-- `POSTGRES_DB`: The PostgreSQL database name.
+| Environment Variable | Description | Required | Default Value |
+|---------------------|-------------|----------|---------------|
+| `AWS_ACCESS_KEY_ID` | The AWS access key ID for the S3 bucket. | Yes | - |
+| `AWS_SECRET_ACCESS_KEY` | The AWS secret access key for the S3 bucket. | Yes | - |
+| `S3_BUCKET_NAME` | The name of the S3 bucket containing the SQL dump file. | Yes | - |
+| `S3_KEY` | The path to the SQL dump file in the S3 bucket. | Yes | - |
+| `DOWNLOAD_FILE` | The local path where the downloaded gzipped SQL dump will be saved (e.g. "dump.sql.gz"). The script will create three files in the same directory:<br>- The downloaded gzipped dump file (e.g. "dump.sql.gz")<br>- A metadata file with the same name plus ".metadata.json" (e.g. "dump.sql.gz.metadata.json") containing the ETag and SHA256 hash<br>- The uncompressed SQL dump with the .gz extension removed (e.g. "dump.sql") | No | `./data/dl/s3_file.sql.gz` |
+| `PRE_PROCESSING_SQL` | The path to the SQL file to run before restoring the dump. | No | - |
+| `POST_PROCESSING_SQL` | The path to the SQL file to run after restoring the dump. | No | - |
+| `POSTGRES_HOST` | The PostgreSQL server hostname. | No | `localhost` |
+| `POSTGRES_PORT` | The PostgreSQL server port. | No | `5432` |
+| `POSTGRES_USER` | The PostgreSQL username. | No | `postgres` |
+| `POSTGRES_PASSWORD` | The PostgreSQL password. | Yes | - |
+| `POSTGRES_DB` | The PostgreSQL database name. | No | `postgres` |
 
 Configuration can also be done via a `.env` file stored in the same directory as
 the script (recommended in development) or in the `/run/secrets` directory (for
@@ -50,10 +44,10 @@ Docker secrets in Swarm or Kubernetes).
 
 ```sh
 docker run --rm \
+  -e AWS_ACCESS_KEY_ID=my-access-key-id \
+  -e AWS_SECRET_ACCESS_KEY=my-secret-access-key \
   -e S3_BUCKET_NAME=my-bucket \
   -e S3_KEY=my-dump.sql.gz \
-  -e S3_ACCESS_KEY_ID=my-access-key-id \
-  -e S3_SECRET_ACCESS_KEY=my-secret-access-key \
   -e DOWNLOAD_FILE=my-dump.sql.gz \
   -e PRE_PROCESSING_SQL=my-pre-processing.sql \
   -e POST_PROCESSING_SQL=my-post-processing.sql \
