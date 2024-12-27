@@ -174,8 +174,8 @@ async def restore_database() -> None:
     metadata = check_s3_file_modifications(
         settings.S3_BUCKET_NAME,
         settings.S3_KEY,
-        settings.S3_ACCESS_KEY_ID,
-        settings.S3_SECRET_ACCESS_KEY,
+        settings.AWS_ACCESS_KEY_ID,
+        settings.AWS_SECRET_ACCESS_KEY,
         etag=prev_metadata.get("etag"),
         uncompressed_sha256=prev_metadata.get("uncompressed_sha256"),
     )
@@ -186,8 +186,8 @@ async def restore_database() -> None:
         download_file_from_s3(
             settings.S3_BUCKET_NAME,
             settings.S3_KEY,
-            settings.S3_ACCESS_KEY_ID,
-            settings.S3_SECRET_ACCESS_KEY,
+            settings.AWS_ACCESS_KEY_ID,
+            settings.AWS_SECRET_ACCESS_KEY,
             str(file_path),
         )
 
