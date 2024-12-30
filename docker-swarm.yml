@@ -12,34 +12,16 @@ services:
         constraints:
           - node.role == manager
 
-  prune-nodes:
-    image: docker
-    command: ["docker", "system", "prune", "-f"]
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    deploy:
-      mode: global
-      labels:
-        - "swarm.cronjob.enable=true"
-        - "swarm.cronjob.schedule=*/3 * * * *"
-        - "swarm.cronjob.skip-running=false"
-      restart_policy:
-        condition: none
-
   sync:
-    image: ghcr.io/wamdata/ds-pg-restore:main
+    image: ghcr.io/wamdata/ds-pg-restore:main # replace main by the version
     volumes:
       - "$PWD/data:/app/data"
     environment:
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
       - S3_KEY=${S3_KEY}
-      - DOWNLOAD_FILE=s3_file.sql.gz
       - PRE_PROCESSING_SQL=/app/data/pre-process.sql
       - POST_PROCESSING_SQL=/app/data/post-process.sql
       - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
     secrets:
       - postgres_password
       - aws_access_key_id
@@ -58,8 +40,6 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
     secrets:
       - postgres_password
