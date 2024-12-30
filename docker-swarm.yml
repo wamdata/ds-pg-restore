@@ -7,6 +7,7 @@ services:
       - "TZ=Europe/Brussels"
       - "LOG_LEVEL=info"
       - "LOG_JSON=false"
+    restart: unless-stopped
     deploy:
       placement:
         constraints:
@@ -15,7 +16,7 @@ services:
   sync:
     image: ghcr.io/wamdata/ds-pg-restore:main # replace main by the version
     volumes:
-      - "$PWD/data:/app/data"
+      - "sync_data:/app/data"
     environment:
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
       - S3_KEY=${S3_KEY}
@@ -27,6 +28,9 @@ services:
       - aws_access_key_id
       - aws_secret_access_key
     deploy:
+      placement:
+        constraints:
+          - node.role == manager
       labels:
         - "swarm.cronjob.enable=true"
         - "swarm.cronjob.schedule=* * * * *" # Run every minute
@@ -37,12 +41,24 @@ services:
 
   postgres:
     image: postgres:17-alpine
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
     secrets:
       - postgres_password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
 secrets:
   postgres_password:
@@ -51,3 +67,9 @@ secrets:
     external: true
   aws_secret_access_key:
     external: true
+
+volumes:
+  sync_data:
+    driver: local
+  postgres_data:
+    driver: local
