@@ -4,7 +4,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings, str_strip_whitespace=True):
-    model_config = SettingsConfigDict(env_file=".env", secrets_dir="/run/secrets")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        secrets_dir="/run/secrets" if Path("/run/secrets").exists() else None,
+    )
 
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
