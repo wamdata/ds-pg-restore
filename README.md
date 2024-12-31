@@ -140,7 +140,7 @@ docker run --rm \
 
    ```sh
    # replace main with your desired version
-   0 2 * * * /path/to/script.sh >> /path/to/script.log 2>&1
+   0 2 * * * flock -n -E 0 /path/to/crontab.lock -c /path/to/script.sh >> /path/to/script.log 2>&1
    ```
 
 ## Development
