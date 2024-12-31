@@ -148,7 +148,20 @@ def run_sql_file(sql_file_path: Path) -> None:
 
     try:
         logger.info(f"Running SQL file: {sql_file_path}")
-        subprocess.run(psql_cmd, env=env, check=True)
+        result = subprocess.run(
+            psql_cmd, env=env, check=False, capture_output=True, text=True
+        )
+        if result.stdout:
+            logger.info(f"psql output: {result.stdout}")
+        if result.stderr:
+            logger.error(f"psql stderr: {result.stderr}")
+        if result.returncode != 0:
+            raise subprocess.CalledProcessError(
+                returncode=result.returncode,
+                cmd=psql_cmd,
+                output=result.stdout,
+                stderr=result.stderr,
+            )
         logger.info(f"Successfully executed SQL file: {sql_file_path}")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to execute SQL file {sql_file_path}: {str(e)}")
@@ -210,7 +223,7 @@ async def restore_database() -> None:
                 shutil.copyfileobj(f_in, f_out)
             logger.info(f"Successfully decompressed {file_path}")
         except Exception as e:
-            logger.error(f"Failed to decompress {file_path}: {str(e)}")
+            logger.error(f"Failed to decompress {file_path}: {str(e)}", exc_info=True)
             raise
 
         # Restore the downloaded dump to PostgreSQL
@@ -224,5 +237,5 @@ async def restore_database() -> None:
                 f"Successfully restored {uncompressed_file_path} to PostgreSQL database"
             )
         except Exception as e:
-            logger.error(f"Failed to restore database: {str(e)}")
+            logger.error(f"Failed to restore database: {str(e)}", exc_info=True)
             raise
