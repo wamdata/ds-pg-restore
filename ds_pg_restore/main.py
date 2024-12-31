@@ -184,8 +184,6 @@ async def restore_database() -> None:
     )
 
     if metadata is not None:
-        metadata["file_path"] = str(file_path)
-
         download_file_from_s3(
             settings.S3_BUCKET_NAME,
             settings.S3_KEY,
