@@ -106,7 +106,7 @@ def download_file_from_s3(
 
     print(f"Starting download of s3://{bucket_name}/{key} to {filename}")
 
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
 
     try:
         s3_client.download_file(
