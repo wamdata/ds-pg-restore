@@ -40,6 +40,39 @@ Docker secrets in Swarm or Kubernetes).
 
 ## Production
 
+For production we assume you already have a postgres database running and
+you want to restore a dump to it.
+
+If not, you can use the following docker-compose file to start a postgres
+database and restore the dump to it.
+
+```yaml
+services:
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - "./data:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_PASSWORD=my-postgres-password
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  postgres-network:
+    external: true
+```
+
+```sh
+sudo docker network create postgres-network
+sudo docker compose up -d
+```
+
 ### Run the script in Docker
 
 ```sh
@@ -49,46 +82,66 @@ docker run --rm \
   -e S3_BUCKET_NAME=my-bucket \
   -e S3_KEY=my-dump.sql.gz \
   -e DOWNLOAD_FILE=my-dump.sql.gz \
-  -e PRE_PROCESSING_SQL=my-pre-processing.sql \
-  -e POST_PROCESSING_SQL=my-post-processing.sql \
+  -e PRE_PROCESSING_SQL=my-pre-process.sql \
+  -e POST_PROCESSING_SQL=my-post-process.sql \
   -e POSTGRES_HOST=my-postgres-host \
   -e POSTGRES_PORT=my-postgres-port \
   -e POSTGRES_USER=my-postgres-user \
   -e POSTGRES_PASSWORD=my-postgres-password \
   -e POSTGRES_DB=my-postgres-db \
-  ds-pg-restore
+  -v /path/to/data:/app/data \
+  --network postgres-network \
+  ghcr.io/wamdata/ds-pg-restore:main # replace main with your desired version
 ```
 
-### Usage With Docker Swarm
+#### Schedule the script with Crontab
 
-This project includes a `docker-swarm.yml` file. This file is used to test
-while developing and can be used to run the script in a Docker Swarm stack. Use
-that file as an example to configure your own Swarm stack and tweak it to your
-needs.
+1. Create a script to run the docker command:
 
-The `docker-swarm.yml` file includes three services:
+   ```sh
+   sudo vim /path/to/script.sh
+   ```
 
-1. `swarm-cronjob`: A service that manages scheduled jobs in Docker Swarm using
-   the `crazymax/swarm-cronjob` image. It runs on manager nodes and handles the
-   scheduling.
+1. Add the following content to the script:
 
-1. `prune-nodes`: A service that prunes Docker nodes in the Swarm cluster. This
-   is useful to clean up unused nodes in the cluster from past runs triggered
-   by `swarm-cronjob`.
+   ```sh
+   #!/bin/bash
+   docker run --rm \
+     -e AWS_ACCESS_KEY_ID=my-access-key-id \
+     -e AWS_SECRET_ACCESS_KEY=my-secret-access-key \
+     -e S3_BUCKET_NAME=my-bucket \
+     -e S3_KEY=my-dump.sql.gz \
+     -e DOWNLOAD_FILE=my-dump.sql.gz \
+     -e PRE_PROCESSING_SQL=my-pre-process.sql \
+     -e POST_PROCESSING_SQL=my-post-process.sql \
+     -e POSTGRES_HOST=my-postgres-host \
+     -e POSTGRES_PORT=my-postgres-port \
+     -e POSTGRES_USER=my-postgres-user \
+     -e POSTGRES_PASSWORD=my-postgres-password \
+     -e POSTGRES_DB=my-postgres-db \
+     -v /path/to/data:/app/data \
+     --network postgres-network \
+     ghcr.io/wamdata/ds-pg-restore:main # replace main with your desired version
+   ```
 
-1. `sync`: The main service that runs our database sync script. It's configured
-   to:
-   - Run on interval via `swarm-cronjob` labels
-   - Skip if a previous job is still running
-   - Not automatically restart
+1. Make the script executable:
 
-1. `postgres`: A PostgreSQL database service
+   ```sh
+   sudo chmod +x /path/to/script.sh
+   ```
 
-To deploy, build the image and deploy as a stack to your Swarm cluster:
+1. Edit the cron table by running:
 
-```sh
-docker stack deploy -c docker-swarm.yml ds-pg-restore-stack
-```
+   ```sh
+   sudo crontab -e
+   ```
+
+1. Add the script with the full path and timing. For example, to run the script every day at 2:00 AM:
+
+   ```sh
+   # replace main with your desired version
+   0 2 * * * /path/to/script.sh >> /path/to/script.log 2>&1
+   ```
 
 ## Development
 
