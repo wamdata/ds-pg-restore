@@ -154,7 +154,10 @@ def run_sql_file(sql_file_path: Path) -> None:
         if result.stdout:
             logger.info(f"psql output: {result.stdout}")
         if result.stderr:
-            logger.error(f"psql stderr: {result.stderr}")
+            if result.returncode != 0:
+                logger.error(f"psql stderr: {result.stderr}")
+            else:
+                logger.warning(f"psql stderr: {result.stderr}")
         if result.returncode != 0:
             raise subprocess.CalledProcessError(
                 returncode=result.returncode,
