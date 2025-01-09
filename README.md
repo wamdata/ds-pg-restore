@@ -15,6 +15,32 @@ Restore a PostgreSQL database from an S3-hosted gzipped SQL dump.
 6. Optionally executes post-processing SQL script
 7. Stores metadata about the restored dump for future change detection
 
+```mermaid
+sequenceDiagram
+    participant RESTORE as Restore Process
+    participant BUCKET as AWS S3 Bucket
+    participant DB as Database
+    
+    RESTORE ->>+ BUCKET : HEAD Request
+    BUCKET -->>- RESTORE : Response
+        
+    alt if etag or uncompressed_sha256 changed since last download
+        RESTORE ->>+ BUCKET : GET Request
+        BUCKET -->>- RESTORE : Download from S3
+        
+        alt if configured
+          RESTORE ->>+ DB: Run pre-process script
+          DB -->>- RESTORE: Result
+        end
+        RESTORE ->>+ DB: Run downloaded script
+        DB -->>- RESTORE: Result
+        alt if configured
+          RESTORE ->>+ DB: Run post-process script
+          DB -->>- RESTORE: Result
+        end
+    end
+```
+
 ## Configuration
 
 Configuration is done via environment variables:
