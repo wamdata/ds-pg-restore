@@ -47,7 +47,7 @@ Configuration is done via environment variables:
 
 | Environment Variable | Description | Required | Default Value |
 |---------------------|-------------|----------|---------------|
-| `AWS_ACCESS_KEY_ID` | The AWS access key ID for the S3 bucket. | Yes | - |
+| `AWS_ACCESS_KEY_ID` | The AWS access key ID for the S3 bucket. You give the least amount of permission see [AWS Permissions policy](#aws-permission-policy). | Yes | - |
 | `AWS_SECRET_ACCESS_KEY` | The AWS secret access key for the S3 bucket. | Yes | - |
 | `S3_BUCKET_NAME` | The name of the S3 bucket containing the SQL dump file. | Yes | - |
 | `S3_KEY` | The path to the SQL dump file in the S3 bucket. | Yes | - |
@@ -63,6 +63,24 @@ Configuration is done via environment variables:
 Configuration can also be done via a `.env` file stored in the same directory as
 the script (recommended in development) or in the `/run/secrets` directory (for
 Docker secrets in Swarm or Kubernetes).
+
+### AWS Permission Policy
+
+ds-pg-restore need to be able to download the file from you AWS bucket. The only permission required is `s3:GetObject`. Below there is a example of an AWS permission policy that you could configure to give the access to `s3:GetObject` for all the files in the `prefix` folder in the bucket named `bucket_name`. Feel free to tweak the `Resource` value to your own needs.
+
+```json
+{
+ "Version": "2012-10-17",
+ "Statement": [
+  {
+   "Sid": "VisualEditor0",
+   "Effect": "Allow",
+   "Action": "s3:GetObject",
+   "Resource": "arn:aws:s3:::bucket_name/prefix/*"
+  }
+ ]
+}
+```
 
 ## Production
 
